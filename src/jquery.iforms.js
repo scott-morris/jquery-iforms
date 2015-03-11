@@ -17,7 +17,7 @@
 *
 * Requires: jQuery
 */
-(function( $ ){
+;(function( $ ){
     // DECLARATIONS ################################################################################
     var lib_settings = { 
         classes: {
@@ -33,6 +33,7 @@
             checkSubmit: 'iform-check-submit'
         },
         queue: 'iform-queue',
+        style: 'iform-style',
         attr: {
             defaultValue: 'iform-defaultValue',
             maxSize: 'iform-maxSize'
@@ -41,10 +42,10 @@
 
     //==============================================================================================
     var opt_default = {
+        stopAction: false,
         afterUpdate: undefined,
         callback: undefined
     };
-
     
     // TEXT INPUT FUNCTIONS ########################################################################
     $.fn.clearDefaultText = function(opt) {
@@ -122,7 +123,10 @@
 
                 // Finally, if not allowed by a set of criteria, stop it from happening ------------
                 if (allow) { 
-                    if (($(this).val().length < opt.maxSize)&&($(this).attr(lib_settings.attr.maxSize)==true)) if ($.isFunction(opt.onNotMaxSize)) opt.onNotMaxSize.apply(this);
+                    if (($(this).val().length < opt.maxSize)&&($(this).attr(lib_settings.attr.maxSize)==true)) {
+                        $(this).attr(lib_settings.attr.maxSize,false);
+                        if ($.isFunction(opt.onNotMaxSize)) opt.onNotMaxSize.apply(this);
+                    }
                     if ($.isFunction(opt.onKeyAllowed)) opt.onKeyAllowed.apply(this);
                 } else {
                     e.preventDefault(); 
@@ -150,9 +154,16 @@
                     }
 
                     // If the resulting value is greater than our maxSize, trim off the end
-                    if ($this.val().length > opts.maxSize) {
+                    if ($this.val().length >= opts.maxSize) {
                         $this.val($this.val().substring(0,opts.maxSize));
+                        $(this).attr(lib_settings.attr.maxSize,true);
                         if ($.isFunction(opt.onMaxSize)) { opt.onMaxSize.apply($this); }
+                    }
+                    
+                    // If the resulting value is less than our maxSize and it previously was at maxSize..
+                    if (($(this).val().length < opt.maxSize)&&($(this).attr(lib_settings.attr.maxSize)==true)) {
+                        $(this).attr(lib_settings.attr.maxSize,false);
+                        if ($.isFunction(opt.onNotMaxSize)) opt.onNotMaxSize.apply(this);
                     }
                     
                     if ($.isFunction(opts.onPaste)) { opts.onPaste.apply($this); }
@@ -182,6 +193,68 @@
         return null;
     }
     
+    // RADIO BUTTON FUNCTIONS ######################################################################
+    $.getRadio = function(radioName) { return $('input:radio[name="' + radioName + '"]'); }
+    //----------------------------------------------------------------------------------------------
+    $.fn._uniqueRadioNames = function() {
+        var radioNameArray = $(this).map(function() { return $(this).attr('name'); }).get();
+        radioNameArray = $.unique(radioNameArray);
+        return radioNameArray;
+    }
+    
+    //==============================================================================================
+    $.getRadioValue = function(radioName, opt) { return $.getRadio(radioName).getRadioValue(opt); }
+    //----------------------------------------------------------------------------------------------
+    $.fn.getRadioValue = function(opt) {
+        opt = $.extend({},opt_default,opt);
+        
+        var radioNameArray = $(this)._uniqueRadioNames();        
+        var returnArray = [];
+        
+        $.each(radioNameArray,function(i,rdoName) {
+            var $thisGroup = $.getRadio(rdoName);
+            var thisValue = ($thisGroup.is(':checked')) ? $thisGroup.filter(':checked').val() : '';
+            returnArray.push(thisValue);
+        });
+        return returnArray;
+    }
+    
+    //==============================================================================================
+    $.setRadioValue = function(radioName, newVal, opt) { return $.getRadio(radioName).setRadioValue(newVal, opt); }
+    //----------------------------------------------------------------------------------------------
+    $.fn.setRadioValue = function(newVal, opt) {
+        opt = $.extend({},opt_default,opt);
+        
+        var radioNameArray = $(this)._uniqueRadioNames();        
+        $.each(radioNameArray,function(i,rdoName) {
+            var $thisGroup = $.getRadio(rdoName);
+            var $oldChecked = $thisGroup.filter(':checked');
+            var $newChecked = $thisGroup.filter('[value="' + newVal + '"]');
+            if (($newChecked.length > 0) && ($oldChecked.val() != newVal)) {
+                $newChecked.check();
+                $oldChecked.trigger(lib_settings.triggers.update);
+                if ($.isFunction(opt.afterUpdate)) opt.afterUpdate.apply(this);
+            }
+        });
+
+        if ($.isFunction(opt.callback)) opt.callback.apply(this);
+        return this;    
+    }
+
+    //==============================================================================================
+    $.fn.makeUncheckable = function(opt) {
+        opt = $.extend({},opt_default,opt);
+        
+        $(this).each(function(i) {
+            $(this)
+                .mousedown(function() { $(this).data("checkedOnMouseDown",$(this).isChecked()); })
+                .click(function() { if ($(this).data("checkedOnMouseDown")) { $(this).uncheck(); } });
+        });
+        
+        if ($.isFunction(opt.callback)) opt.callback.apply(this);
+        return null;
+    }
+    
     // CHECKBOX FUNCTIONS ##########################################################################
     $.fn.check = function(opt) {
         opt = $.extend({},opt_default,opt);
@@ -189,7 +262,7 @@
             var triggerUpdate = !($(this).isChecked());
             $(this).attr('checked',true);
             if (triggerUpdate) {
-                $(this).trigger(lib_settings.triggers.update);
+                $(this).triggerUpdate(opt);
                 if ($.isFunction(opt.afterUpdate)) opt.afterUpdate.apply(this);
             }
         });
@@ -204,7 +277,7 @@
             var triggerUpdate = $(this).isChecked();
             $(this).attr('checked',false);
             if (triggerUpdate) {
-                $(this).trigger(lib_settings.triggers.update);
+                $(this).triggerUpdate(opt);
                 if ($.isFunction(opt.afterUpdate)) opt.afterUpdate.apply(this);
             }
         });
@@ -214,21 +287,25 @@
     
     //==============================================================================================
     $.fn.toggleChecked = function(checked, opt) {
-        if (typeof checked !== boolean) opt = checked;
+        if (typeof checked !== "boolean") {
+            opt = checked;
+            checked = undefined;
+        }
         opt = $.extend({},opt_default,opt);
         if (checked !== undefined) {
             $(this).each(function() {
                 var triggerUpdate = ($(this).isChecked() != checked);
                 $(this).attr('checked',checked);
                 if (triggerUpdate) {
-                    $(this).trigger(lib_settings.triggers.update);
+                    $(this).triggerUpdate(opt);
                     if ($.isFunction(opt.afterUpdate)) opt.afterUpdate.apply(this);
                 }
             });
         } else {
             $(this).each(function() { 
                 $(this).attr('checked',!($(this).isChecked())); 
-                $(this).trigger(lib_settings.triggers.update);
+                $(this).triggerUpdate(opt);
+                //$(this).trigger(lib_settings.triggers.update);
                 if ($.isFunction(opt.afterUpdate)) opt.afterUpdate.apply(this);
             });
         }
@@ -255,9 +332,356 @@
     }
 
     //==============================================================================================
-    $.fn.isChecked = function() { return ($(this).attr('checked') !== undefined); }
+    $.fn.isChecked = function() { return ($(this).is(':checked')); }
 
+    // COMBOBOX FUNCTIONS ##########################################################################
+    $.fn.setCombobox = function(newVal, opt) {
+        opt = $.extend({},opt_default,opt);
+        $(this).each(function(i){
+            // If newVal is found in the list of value options
+            if ($(this).children('option[value="' + newVal + '"]').length != 0) {
+                $(this).val(newVal);
+                $(this).triggerUpdate(opt);
+
+            // If newVal was not found in the list of values, but is found in the visible text options
+            } else if ($(this).children('option:textMatches("' + newVal + '")').length != 0) {
+                $(this).children('option:textMatches("' + newVal + '")').attr('selected',true);
+                $(this).val(newVal).triggerUpdate(opt);
+            }
+            if ($.isFunction(opt.afterUpdate)) opt.afterUpdate.apply(this);
+        });        
+        if ($.isFunction(opt.callback)) opt.callback.apply(this);
+        return this;
+    }
+    
+    //==============================================================================================
+    $.fn.comboboxText = function(opt) { 
+        opt = $.extend({},opt_default,opt);
+        var returnArray = $(this).map(function() { return $(this).children('option:selected').text(); });
+        if ($.isFunction(opt.callback)) opt.callback.apply(this);
+        return returnArray;
+    }
+    
+    // RELATED OBJECTS FUNCTIONS ###################################################################
+    $.fn.radioCheckbox = function(opt) {
+        opt = $.extend({},opt_default,opt);
+        var $wholeGroup = ($(this).is('input:checkbox')) ? $(this) : $(this).find('input:checkbox');
+        
+        $wholeGroup.onUpdate(function () {
+            if ($(this).isChecked()) {
+                $wholeGroup.not($(this)).uncheck();
+                if ($.isFunction(opt.afterUpdate)) opt.afterUpdate.apply(this);
+            }
+        });
+        $wholeGroup.addUpdateTrigger();
+
+        if ($.isFunction(opt.callback)) opt.callback.apply(this);
+        return this;
+    }
+    
+    //==============================================================================================
+    $.fn.cascadeCheckbox = function(relObj, opt) {
+        var fn_default = {
+            checkParentIfChildChecked: true,
+            uncheckParentIfNoChildChecked: true
+        };
+        opt = $.extend({},opt_default,fn_default,opt);
+        
+        var $parent = $(this);
+        var $relObj = $(relObj);
+        
+        $parent.onUpdate(function(t_opt) {
+            t_opt = $.extend({stopAction:false},t_opt);
+            if (!t_opt.stopAction) $relObj.toggleChecked($(this).isChecked()); 
+        });
+        
+        if (opt.checkParentIfChildChecked) {
+            $relObj.each(function(i,obj) {
+                $(this).onUpdate(function() {
+                    if ($(this).isChecked()) $parent.check({stopAction:true});
+                });
+            });
+        }
+        
+        if (opt.uncheckParentIfNoChildChecked) {
+            $relObj.each(function(i,obj) {
+                $(this).onUpdate(function() {
+                    if ($relObj.filter(':checked').length == 0) $parent.uncheck({stopAction:true});
+                });
+            });
+        }
+        
+        // Trigger Updates on Child Objects
+        $relObj.triggerUpdate(opt);
+        
+        if ($.isFunction(opt.callback)) opt.callback.apply(this);
+        return this;
+    }
+
+    //==============================================================================================
+    $.fn.relatedVisible = function(relObj, opt) {
+        var fn_default = {
+            triggerValues: [],
+            negativeCorrelation: false
+        };
+        opt = $.extend({},opt_default,fn_default,opt);
+        
+        var $parent = $(this),
+            $relObj = $(relObj),
+            relObjVisible;
+        
+        if ($parent.is('input:checkbox, input:radio')) {
+            $parent.onUpdate(function() {
+                relObjVisible = ($parent.isChecked() ^ opt.negativeCorrelation) ? true : false;
+                $relObj.toggle(relObjVisible);
+                if ($.isFunction(opt.afterUpdate)) opt.afterUpdate.apply(this);
+            });
+        } else {
+            $parent.onUpdate(function() {
+                relObjVisible = ($parent.triggerCriteriaMet(opt) ^ opt.negativeCorrelation) ? true : false;
+                $relObj.toggle(relObjVisible);
+                if ($.isFunction(opt.afterUpdate)) opt.afterUpdate.apply(this);
+            });
+        }
+
+        $parent.triggerUpdate(opt);
+        
+        if ($.isFunction(opt.callback)) opt.callback.apply(this);
+        return this;
+    }
+/*    
+    //==============================================================================================
+    $.fn.relatedEnabled = function(relObj, opt) {
+        var fn_default = {
+            triggerValues: [],
+            negativeCorrelation: false
+        };
+        opt = $.extend({},opt_default,fn_default,opt);
+        
+        var $parent = $(this),
+            $relObj = $(relObj),
+            relObjEnabled;
+        
+        if ($parent.is('input:checkbox, input:radio')) {
+            $parent.onUpdate(function() {
+                relObjEnabled = ($parent.isChecked() ^ opt.negativeCorrelation) ? true : false;
+                
+            });
+        } else {
+            $parent.onUpdate(function() {
+                relObjEnabled = ($parent.triggerCriteriaMet(opt) ^ opt.negativeCorrelation) ? true : false;
+                
+            });
+        }
+
+        $parent.triggerUpdate(opt);
+
+        if ($.isFunction(opt.callback)) opt.callback.apply(this);
+        return this;
+    }
+*/    
+    //==============================================================================================
+    $.fn.relatedToggleClass = function(relObj, className, opt) {
+        var fn_default = {
+            triggerValues: [],
+            negativeCorrelation: false
+        };
+        opt = $.extend({},opt_default,fn_default,opt);
+        
+        var $parent = $(this),
+            $relObj = $(relObj),
+            relObjApplyClass;
+        
+        if ($parent.is('input:checkbox, input:radio')) {
+            $parent.onUpdate(function() {
+                relObjApplyClass = ($parent.isChecked() ^ opt.negativeCorrelation) ? true : false;
+                $relObj.toggleClass(className, relObjApplyClass);
+                if ($.isFunction(opt.afterUpdate)) opt.afterUpdate.apply(this);
+            });
+        } else {
+            $parent.onUpdate(function() {
+                relObjApplyClass = ($parent.triggerCriteriaMet(opt) ^ opt.negativeCorrelation) ? true : false;
+                $relObj.toggleClass(className, relObjApplyClass);
+                if ($.isFunction(opt.afterUpdate)) opt.afterUpdate.apply(this);
+            });
+        }
+
+        $parent.triggerUpdate(opt);
+
+        if ($.isFunction(opt.callback)) opt.callback.apply(this);
+        return this;
+    }
+    
+    //==============================================================================================
+    $.fn.relatedSetValue = function(relObj, newValue, opt) {
+        var fn_default = {
+            triggerValues: [],
+            negativeCorrelation: false
+        };
+        opt = $.extend({},opt_default,fn_default,opt);
+        
+        var $parent = $(this),
+            $relObj = $(relObj),
+            relObjSetValue;
+        
+        if ($parent.is('input:checkbox, input:radio')) {
+            $parent.onUpdate(function() {
+                relObjSetValue = ($parent.isChecked() ^ opt.negativeCorrelation) ? true : false;
+                $relObj.set(relObjSetValue);
+                if ($.isFunction(opt.afterUpdate)) opt.afterUpdate.apply(this);
+            });
+        } else {
+            $parent.onUpdate(function() {
+                relObjSetValue = ($parent.triggerCriteriaMet(opt) ^ opt.negativeCorrelation) ? true : false;
+                $relObj.set(relObjSetValue);
+                if ($.isFunction(opt.afterUpdate)) opt.afterUpdate.apply(this);
+            });
+        }
+
+        $parent.triggerUpdate(opt);
+
+        if ($.isFunction(opt.callback)) opt.callback.apply(this);
+        return this;
+    }
+
+/*    
+    //==============================================================================================
+    function triggerRelation(opt) {
+        var fn_default = {
+            
+        };
+        opt = $.extend({},opt_default,fn_default,opt);
+    }
+*/  
+    //==============================================================================================
+    $.fn.triggerCriteriaMet = function(opt) {
+        var fn_default = {
+            triggerValues: []
+        };
+        opt = $.extend({},opt_default,fn_default,opt);
+
+        var $relObj = $(this),
+            objType = $relObj.getObjectType()[0],
+            triggered = false;
+        
+        if ($.inArray(objType,['checkbox','radio']) > -1) {
+            if (opt.triggerValues.length == 0) {
+                triggered = $relObj.isChecked();
+            } else {
+                if ($relObj.isChecked()) {
+                    if ($.inArray(true,opt.triggerValues)) triggered = true;
+                    if ($.inArray("true",opt.triggerValues)) triggered = true;
+                    if ($.inArray("checked",opt.triggerValues)) triggered = true;
+                } else { // not checked
+                    if ($.inArray(false,opt.triggerValues)) triggered = true;
+                    if ($.inArray("false",opt.triggerValues)) triggered = true;
+                    if ($.inArray("unchecked",opt.triggerValues)) triggered = true;
+                }
+            }
+        } else {
+            if ($.inArray($relObj.val(),opt.triggerValues) > -1) triggered = true;
+        }
+
+        return triggered;
+    }
+    //==============================================================================================
+    $.fn.toggleVisibilityOnClick = function(relObj, opt) {
+        var fn_default = {
+            startHidden: true
+        };
+        opt = $.extend({},opt_default,fn_default,opt);
+        var $relObj = $(relObj);
+
+        $(this).click(function() { $relObj.toggle(); });
+        $relObj.toggle(!opt.startHidden);
+        
+        if ($.isFunction(opt.callback)) opt.callback.apply(this);
+        return this;
+    }
+    
+    // TRIGGER FUNCTIONS ###########################################################################
+    $.fn.onUpdate = function(f) {
+        if ($.isFunction(f)) {
+            $(this).bind(lib_settings.triggers.update, function(e,args) { f.call(this,args); });
+            $(this).addUpdateTrigger();
+        }
+    }
+    
+    //==============================================================================================
+    $.triggerUpdateOnAll = function(opt) { 
+        var opt = $.extend({},opt_default,opt);
+        $('input').triggerUpdate(opt); 
+    }
+    
+    //==============================================================================================
+    $.fn.addUpdateTrigger = function() {
+        $(this).each(function(i) {
+            var eventName = ($(this).is('input:checkbox, input:radio')) ? 'click' : 'change';
+            $(this).on(eventName,function() { $(this).trigger(lib_settings.triggers.update); }); 
+        });
+    }
+
+    //==============================================================================================
+    $.fn.triggerUpdate = function(opt) { 
+        opt = $.extend({},opt);
+        $(this).trigger(lib_settings.triggers.update,opt); 
+        return this;
+    }
+
+    //==============================================================================================
+    $.fn.hasTrigger = function(triggerName) {
+        var triggers = $.data($(this)[0],'events');
+        var triggerPresent = false;        
+        try {
+            triggerPresent = (triggers[triggerName] !== undefined);
+        } catch(err) { /* do nothing */ }
+        return triggerPresent;
+    }
+    
+    //==============================================================================================
+    $.fn.triggerList = function() {
+        var triggers = $.data($(this)[0],'events');
+        return triggers;
+    }
+    
     // OTHER FUNCTIONS #############################################################################
+    $.fn.reset = function(opt) {
+        opt = $.extend({},opt_default,opt);
+        $(this).each(function(i) {
+            this.reset();
+            $(this).find('input, select, textarea').triggerUpdate();
+        });
+        if ($.isFunction(opt.callback)) opt.callback.apply(this);
+    }
+
+    //==============================================================================================
+    $.fn.tryFocus = function(opt) {
+        opt = $.extend({},opt_default,opt);
+        var found = false;
+        $(this).each(function(i) {
+            if ($(this).is(":visible")) {
+                $(this).focus();
+                found = true;
+                return false;
+            }
+        });
+        if ($.isFunction(opt.callback)) opt.callback.apply(this);
+        
+        return found;
+    }
+    
+    //==============================================================================================
+    $.fn.addCSSrule = function(css, id) {
+        if (id === undefined) id = lib_settings.style;
+        if ($('style#' + id).length == 0) {
+            var newCSSrule = $('<style type="text/css">').attr('id',id).append(css);
+            $('head').append(newCSSrule);
+        } else {
+            var cssRule = $('style#' + id).append(css);
+        }
+    }
+    
+    //==============================================================================================
     $.fn.getObjectType = function(opt) {
         opt = $.extend({},opt_default,opt);
         var returnArray = $(this).map(function() {
@@ -270,16 +694,137 @@
         return returnArray;
     }
     
-    $.fn.timeout = function(timeSeconds, submitButton, opt) {
-        var timeoutMilliseconds = timeSeconds * 1000;
-        var fn_default = { timeout: 600000 };
+    //==============================================================================================
+    $.submitOnTimeout = function(submitButton, opt) {
+        var fn_default = { 
+            seconds: 585, /* 9.75 minutes, just before the default 10 minute timeout of HEO */
+            onTimeout: function() { $(submitButton).click(); }
+        };
         opt = $.extend({},opt_default,fn_default,opt);
+        var timeoutMilliseconds = opt.seconds * 1000;
+        setTimeout(opt.onTimeout, timeoutMilliseconds);
     }
+    
+    //==============================================================================================
+    $.expr[":"].textMatches = function(obj, index, meta, stack){
+        return (obj.textContent || obj.innerText || $(obj).text() || "").toLowerCase() == meta[3].toLowerCase();
+    }
+    
+    //==============================================================================================
+    $.vgr_init = function(opt) {
+        var fn_default = { 
+            outputTo: 'newWindow' // valid options: newWindow, console, jquery object
+        };
+        opt = $.extend({},opt_default,fn_default,opt);
+
+        var output = [], 
+            line = '', 
+            itemVal = '', 
+            strOutput;
+
+        // Drop Down Boxes -------------------------------------------------------------------------
+        if ($('select').length > 0) output.push('# Drop Down Boxes ' + Array(81).join('-'));
+        $.each($('select'),function(i,item) {
+            itemVal = ($(item).val() !== '') ? '"' + $(item).val() + '"' : '';
+            line = 'INIT,SET,SELECT,' + $(item).attr('id') + ',TO,' + itemVal;
+            output.push(line);
+        });
+
+        // Checkboxes ------------------------------------------------------------------------------
+        if ($('input:checkbox').length > 0) output.push('# Checkboxes ' + Array(86).join('-'));
+        $.each($('input:checkbox'),function(i,item) {
+            itemVal = ($(item).isChecked()) ? '"' + $(item).val() + '"' : '';
+            line = 'INIT,SET,CHECKBOX,' + $(item).attr('id') + ',TO,' + itemVal;
+            output.push(line);
+        });
+        
+        // Radio Buttons ---------------------------------------------------------------------------
+        if ($('input:radio').length > 0) output.push('# Radio Buttons ' + Array(83).join('-'));
+        var radioGroups = $('input:radio')._uniqueRadioNames();
+        $.each(radioGroups, function(i,rdoGroup) {
+            itemVal = ($.getRadioValue(rdoGroup)[0] !== '') ? '"' + $.getRadioValue(rdoGroup)[0] + '"' : '';
+            line = 'INIT,SET,RADIO,' + rdoGroup + ',TO,' + itemVal;
+            output.push(line);
+        });
+        
+        // Text Boxes ------------------------------------------------------------------------------
+        if ($('input:text').length > 0) output.push('# Text Boxes ' + Array(86).join('-'));
+        $.each($('input:text'), function(i,item) {
+            itemVal = ($(item).val() !== '') ? '"' + $(item).val() + '"' : '';
+            line = 'INIT,SET,TEXT,' + $(item).attr('id') + ',TO,' + itemVal;
+            output.push(line);
+        });
+        
+        // Buttons ---------------------------------------------------------------------------------
+        if ($('input:button, input:reset, input:submit').length > 0) output.push('# Buttons ' + Array(89).join('-'));
+        $.each($('input:button, input:reset, input:submit'),function(i,item) {
+            line = 'INIT,SET,HIDDEN,' + $(item).attr('id') + ',TO,';
+            output.push(line);
+        });
+
+        switch (opt.outputTo) {
+            case 'newWindow':
+                opt.separator = opt.separator || '<br />';
+                strOutput = output.join(opt.separator);
+                
+                myWindow=window.open('','','width=650,height=600,location=no,left=10,top=10');
+                myWindow.document.write(strOutput);
+                myWindow.focus();                    
+            break;
+            
+            case 'console':
+                opt.separator = opt.separator || '\n';
+                strOutput = output.join(opt.separator);
+                console.log(strOutput);
+            break;
+            
+            default:
+                opt.separator = opt.separator || '<br />';
+                strOutput = output.join(opt.separator);
+                if ($(opt.outputTo).length > 0) $(opt.outputTo).append(strOutput);
+            break;
+        }
+     
+        return strOutput;
+    }
+
+    //==============================================================================================
+    $.fn.set = function(newVal,opt) {
+        opt = $.extend({},opt_default,opt);
+        $.each($(this),function(i,item) {
+            switch ($(item).getObjectType()[0]) {
+                case 'select':
+                    $(this).setCombobox(newVal);
+                break;
+                
+                case 'radio':
+                    $(this).setRadioValue(newVal);
+                break;
+                
+                case 'checkbox':
+                    var checked = false;
+                    if (typeof newVal == 'boolean') {
+                        checked = newVal;
+                    } else {
+                        checked = (newVal.toLowerCase() == 'checked');
+                    }
+                    $(this).toggleChecked(checked);
+                break;
+                
+                default:
+                    $(this).val(newVal).trigger(lib_settings.triggers.update);
+                break;
+            }
+            
+            if ($.isFunction(opt.afterUpdate)) opt.afterUpdate.apply($textArea);
+        });
+        
+        if ($.isFunction(opt.callback)) opt.callback.apply(this);
+        return this;
+    }    
 })( jQuery );
 
 /* TO DO ###########################################################################################
-- fix the toggleChecked w/ options
-- finish $.fn.timeout
 */
 
 /*
@@ -287,46 +832,48 @@ FUNCTION LIST
 ====================================================================================================
 Text Input Functions
     [x] clearDefaultText
-    [x] maskInput
+    [x] maskInput (includes functions for maxSize)
     [x] textboxToTextArea
+Radio Button Functions
+    [x] getRadio
+    [x] _uniqueRadioNames
+    [x] getRadioValue
+    [x] setRadioValue
+    [x] makeUncheckable
 Checkbox Functions
-    [x] isChecked
     [x] check
     [x] uncheck
     [x] toggleChecked
     [x] checkAll
     [x] uncheckAll
-Radio Button Functions
-    [ ] getRadioValue
-    [ ] setRadioValue
+    [x] isChecked
+Combobox Functions
+    [x] setCombobox
+    [x] comboboxText
 Related Objects Functions
-    [ ] RadioCheckboxes
-    [ ] CascadeParentCheckbox
-    [ ] CascadeParentCheckboxWithCallback
-    [ ] ParentCheckboxEnabled
-    [ ] ParentCheckboxVisibility
-    [ ] ParentCheckboxToggleClass
-    [ ] ParentCheckboxSetValue
-    [ ] ParentCheckForRadioButtons
-    [ ] ParentComboBoxEnabled
-    [ ] ParentComboBoxVisibility
-    [ ] ParentComboBoxToggleClass
-    [ ] ParentComboBoxSetValue
-    [ ] ParentComboBoxChildValues
-    [ ] ChildCallbackToParentCheckbox
-NEW Related Objects Functions
-    [ ] RadioCheckbox
-    [ ] CascadeCheckbox (incl callback in options)
-    [ ] RelatedEnabled
-    [ ] RelatedVisible
-    [ ] RelatedToggleClass
-    [ ] RelatedSetValue
+    [x] radioCheckbox
+    [x] cascadeCheckbox (incl callback in options)
+    [ ] relatedEnabled
+    [x] relatedVisible
+    [x] relatedToggleClass
+    [x] relatedSetValue
+    [ ] selectOnUpdate (old ChildCallbackToParentCheckbox function)
+Trigger Functions
+    [x] triggerUpdateOnAll
+    [x] addUpdateTrigger
+    [x] triggerUpdate
+    [x] hasTrigger
 Other Functions
-    [ ] checkSubmit (preventSubmit?)
-    [ ] vgr_init (rename to generateVGR?)
-    [ ] jQueryFindItem (rename to jqFind?) 
+    [x] reset
+    [x] tryFocus
+    [x] addCSSrule
     [x] getObjectType
-    [ ] timeout
+    [x] submitOnTimeout
+    [x] ':textMatches' expression
+    [x] vgr_init
+    [x] set
+    [ ] checkSubmit (preventSubmit?)
+    [ ] synchControls (?)
 */
 
 /*
@@ -383,52 +930,4 @@ Code   Key                                    Code   Key
  82    r                                      220    back slash
  83    s                                      221    close braket
  84    t                                      222    single quote
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 */

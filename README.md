@@ -3,12 +3,12 @@
 iForm Script Library based using the jQuery framework
 http://heo-iforms.blogger.com/
 
-This file contains scripts that deal with the *FUNCTIONALITY* of an iForm
+<!-- This file contains scripts that deal with the *FUNCTIONALITY* of an iForm
 If you are looking for scripts that deal with *STYLING*, please also include `jquery.iforms.style.js`
 If you are looking for scripts that deal with *UI ELEMENTS*, please also include `jquery.iforms-ui.js`
 
 There are also additional scripts for `QTIP` and Date Functions
-
+ -->
 Version: 0.1
 
 Dual licensed under MIT or GPLv2 licenses
@@ -19,47 +19,49 @@ Requires: jQuery
 
 ### Function List
 * Text Input Functions
-    * [x] `clearDefaultText`
-    * [x] `maskInput`
-    * [x] `textboxToTextArea`
-* Checkbox Functions
-    * [x] `isChecked`
-    * [x] `check`
-    * [x] `uncheck`
-    * [x] `toggleChecked`
-    * [x] `checkAll`
-    * [x] `uncheckAll`
+    * [x] clearDefaultText
+    * [x] maskInput (includes functions for maxSize)
+    * [x] textboxToTextArea
 * Radio Button Functions
-    * [ ] `getRadioValue`
-    * [ ] `setRadioValue`
+    * [x] getRadio
+    * [x] _uniqueRadioNames
+    * [x] getRadioValue
+    * [x] setRadioValue
+    * [x] makeUncheckable
+* Checkbox Functions
+    * [x] check
+    * [x] uncheck
+    * [x] toggleChecked
+    * [x] checkAll
+    * [x] uncheckAll
+    * [x] isChecked
+* Combobox Functions
+    * [x] setCombobox
+    * [x] comboboxText
 * Related Objects Functions
-    * [ ] `RadioCheckboxes`
-    * [ ] `CascadeParentCheckbox`
-    * [ ] `CascadeParentCheckboxWithCallback`
-    * [ ] `ParentCheckboxEnabled`
-    * [ ] `ParentCheckboxVisibility`
-    * [ ] `ParentCheckboxToggleClass`
-    * [ ] `ParentCheckboxSetValue`
-    * [ ] `ParentCheckForRadioButtons`
-    * [ ] `ParentComboBoxEnabled`
-    * [ ] `ParentComboBoxVisibility`
-    * [ ] `ParentComboBoxToggleClass`
-    * [ ] `ParentComboBoxSetValue`
-    * [ ] `ParentComboBoxChildValues`
-    * [ ] `ChildCallbackToParentCheckbox`
-* Related Objects Functions
-    * [ ] `RadioCheckbox`
-    * [ ] `CascadeCheckbox` (incl callback in options)
-    * [ ] `RelatedEnabled`
-    * [ ] `RelatedVisible`
-    * [ ] `RelatedToggleClass`
-    * [ ] `RelatedSetValue`
+    * [x] radioCheckbox
+    * [x] cascadeCheckbox (incl callback in options)
+    * [ ] relatedEnabled
+    * [x] relatedVisible
+    * [x] relatedToggleClass
+    * [x] relatedSetValue
+    * [ ] selectOnUpdate (old ChildCallbackToParentCheckbox function)
+* Trigger Functions
+    * [x] triggerUpdateOnAll
+    * [x] addUpdateTrigger
+    * [x] triggerUpdate
+    * [x] hasTrigger
 * Other Functions
-    * [ ] `checkSubmit` (preventSubmit?)
-    * [ ] `vgr_init` (rename to generateVGR?)
-    * [ ] `jQueryFindItem` (rename to jqFind?) 
-    * [x] `getObjectType`
-    * [ ] `timeout`
+    * [x] reset
+    * [x] tryFocus
+    * [x] addCSSrule
+    * [x] getObjectType
+    * [x] submitOnTimeout
+    * [x] ':textMatches' expression
+    * [x] vgr_init
+    * [x] set
+    * [ ] checkSubmit (preventSubmit?)
+    * [ ] synchControls (?)
 
 ### To Do:
 * fix the `toggleChecked` w/ options
