@@ -68,54 +68,103 @@ Requires: jQuery
 * finish `$.fn.timeout`
 
 ### Keycode Reference for `maskInput`
-| Code | Key           | | Code | Key |
-| ------ | --------------- | - | ------ | ----- |
-|  8 | backspace       | | 85 | u |
-|  9 | tab             | | 86 | v |
-| 13 | enter           | | 87 | w |
-| 16 | shift           | | 88 | x |
-| 17 | ctrl            | | 89 | y |
-| 18 | alt             | | 90 | z |
-| 19 | pause/break     | | 91 | left window key |
-| 20 | caps lock       | | 92 | right window key |
-| 27 | escape          | | 93 | select key |
-| 33 | page up         | | 96 | numpad 0 |
-| 34 | page down       | | 97 | numpad 1 |
-| 35 | end             | | 98 | numpad 2 |
-| 36 | home            | | 99 | numpad 3 |
-| 37 | left arrow      | | 00 | numpad 4 |
-| 38 | up arrow        | | 01 | numpad 5 |
-| 39 | right arrow     | | 02 | numpad 6 |
-| 40 | down arrow      | | 03 | numpad 7 |
-| 45 | insert          | | 04 | numpad 8 |
-| 46 | delete          | | 05 | numpad 9 |
-| 48 | 0               | | 06 | multiply |
-| 49 | 1               | | 07 | add |
-| 50 | 2               | | 09 | subtract |
-| 51 | 3               | | 10 | decimal point |
-| 52 | 4               | | 11 | divide |
-| 53 | 5               | | 12 | f1 |
-| 54 | 6               | | 13 | f2 |
-| 55 | 7               | | 14 | f3 |
-| 56 | 8               | | 15 | f4 |
-| 57 | 9               | | 16 | f5 |
-| 65 | a               | | 17 | f6 |
-| 66 | b               | | 18 | f7 |
-| 67 | c               | | 19 | f8 |
-| 68 | d               | | 20 | f9 |
-| 69 | e               | | 21 | f10 |
-| 70 | f               | | 22 | f11 |
-| 71 | g               | | 23 | f12 |
-| 72 | h               | | 44 | num lock |
-| 73 | i               | | 45 | scroll lock |
-| 74 | j               | | 86 | semi-colon |
-| 75 | k               | | 87 | equal sign |
-| 76 | l               | | 88 | comma |
-| 77 | m               | | 89 | dash |
-| 78 | n               | | 90 | period |
-| 79 | o               | | 91 | forward slash |
-| 80 | p               | | 92 | grave accent |
-| 81 | q               | | 19 | open bracket |
-| 82 | r               | | 20 | back slash |
-| 83 | s               | | 21 | close braket |
-| 84 | t               | | 22 | single quote |
+| Code | Key |
+| ---- | --- |
+|  8 | <kbd>backspace</kbd>   |      
+|  9 | <kbd>tab</kbd>         |      
+| 13 | <kbd>enter</kbd>       |     
+| 16 | <kbd>shift</kbd>       |     
+| 17 | <kbd>ctrl</kbd>        |     
+| 18 | <kbd>alt</kbd>         |     
+| 19 | <kbd>pause/break</kbd> | 
+| 20 | <kbd>caps lock</kbd>   | 
+| 27 | <kbd>escape</kbd>      | 
+| 33 | <kbd>page up</kbd>     | 
+| 34 | <kbd>page down</kbd>   | 
+| 35 | <kbd>end</kbd>         | 
+| 36 | <kbd>home</kbd>        | 
+| 37 | <kbd>left arrow</kbd>  | 
+| 38 | <kbd>up arrow</kbd>    | 
+| 39 | <kbd>right arrow</kbd> | 
+| 40 | <kbd>down arrow</kbd>  | 
+| 45 | <kbd>insert</kbd>      | 
+| 46 | <kbd>delete</kbd>      | 
+| 48 | <kbd>0</kbd> | 
+| 49 | <kbd>1</kbd> | 
+| 50 | <kbd>2</kbd> | 
+| 51 | <kbd>3</kbd> | 
+| 52 | <kbd>4</kbd> | 
+| 53 | <kbd>5</kbd> | 
+| 54 | <kbd>6</kbd> | 
+| 55 | <kbd>7</kbd> | 
+| 56 | <kbd>8</kbd> | 
+| 57 | <kbd>9</kbd> | 
+| 65 | <kbd>a</kbd> | 
+| 66 | <kbd>b</kbd> | 
+| 67 | <kbd>c</kbd> | 
+| 68 | <kbd>d</kbd> | 
+| 69 | <kbd>e</kbd> | 
+| 70 | <kbd>f</kbd> | 
+| 71 | <kbd>g</kbd> | 
+| 72 | <kbd>h</kbd> | 
+| 73 | <kbd>i</kbd> | 
+| 74 | <kbd>j</kbd> | 
+| 75 | <kbd>k</kbd> | 
+| 76 | <kbd>l</kbd> | 
+| 77 | <kbd>m</kbd> | 
+| 78 | <kbd>n</kbd> | 
+| 79 | <kbd>o</kbd> | 
+| 80 | <kbd>p</kbd> | 
+| 81 | <kbd>q</kbd> | 
+| 82 | <kbd>r</kbd> | 
+| 83 | <kbd>s</kbd> | 
+| 84 | <kbd>t</kbd> | 
+| 85 | <kbd>u</kbd> |
+| 86 | <kbd>v</kbd> |
+| 87 | <kbd>w</kbd> |
+| 88 | <kbd>x</kbd> |
+| 89 | <kbd>y</kbd> |
+| 90 | <kbd>z</kbd> |
+| 91 | left <kbd>window</kbd> |
+| 92 | right <kbd>window</kbd> |
+| 93 | <kbd>select</kbd> |
+| 96 | numpad <kbd>0</kbd> |
+| 97 | numpad <kbd>1</kbd> |
+| 98 | numpad <kbd>2</kbd> |
+| 99 | numpad <kbd>3</kbd> |
+| 00 | numpad <kbd>4</kbd> |
+| 01 | numpad <kbd>5</kbd> |
+| 02 | numpad <kbd>6</kbd> |
+| 03 | numpad <kbd>7</kbd> |
+| 04 | numpad <kbd>8</kbd> |
+| 05 | numpad <kbd>9</kbd> |
+| 06 | numpad <kbd>*</kbd> |
+| 07 | numpad <kbd>+</kbd> |
+| 09 | numpad <kbd>-</kbd> |
+| 10 | numpad <kbd>.</kbd> |
+| 11 | numpad <kbd>/</kbd> |
+| 12 | <kbd>f1</kbd> |
+| 13 | <kbd>f2</kbd> |
+| 14 | <kbd>f3</kbd> |
+| 15 | <kbd>f4</kbd> |
+| 16 | <kbd>f5</kbd> |
+| 17 | <kbd>f6</kbd> |
+| 18 | <kbd>f7</kbd> |
+| 19 | <kbd>f8</kbd> |
+| 20 | <kbd>f9</kbd> |
+| 21 | <kbd>f10</kbd> |
+| 22 | <kbd>f11</kbd> |
+| 23 | <kbd>f12</kbd> |
+| 44 | <kbd>num lock</kbd> |
+| 45 | <kbd>scroll lock</kbd> |
+| 86 | <kbd>;</kbd> |
+| 87 | <kbd>=</kbd> |
+| 88 | <kbd>,</kbd> |
+| 89 | <kbd>-</kbd> |
+| 90 | <kbd>.</kbd> |
+| 91 | <kbd>/</kbd> |
+| 92 | <kbd>`</kbd> |
+| 19 | <kbd>[</kbd> |
+| 20 | <kbd>\\</kbd> |
+| 21 | <kbd>]</kbd> |
+| 22 | <kbd>'</kbd> |
